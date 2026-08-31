@@ -1,4 +1,4 @@
-# Canvas Boards
+# Adamastor
 
 **A board you build with your AI — and that both of you can read again next week.**
 
@@ -19,6 +19,9 @@ where you put it, that you can move, edit, group and keep — and that the agent
 read back later.
 
 Chat gives you answers you scroll past. This gives you a board you can move.
+
+*Adamastor is the giant of the Cape of Storms in Camões' Os Lusíadas — the one who
+guards the passage round the Cape.*
 
 ## The seven tools
 
@@ -70,6 +73,9 @@ deploy.
 
 On macOS the packaged build script expects GNU tools; use `npx vite build` instead
 of `npm run build`.
+
+Some internal storage keys still use the project's original name. They are
+deliberately unchanged, because renaming them would orphan existing saved boards.
 
 ## Built with
 
