@@ -1,113 +1,82 @@
-# vinext-starter
+# Canvas Boards
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+**A board you build with your AI — and that both of you can read again next week.**
 
-## Prerequisites
+Live site: https://canvas-boards.dtoearth.chatgpt.site/
 
-- Node.js `>=22.13.0`
-- Linux with `flock`, `curl`, and GNU `timeout`
+> **For judges:** the WebMCP tools require the ChatGPT desktop app's built-in browser
+> (model GPT-5.6 Sol or Terra — Luna has WebMCP disabled), or Chrome 149+ with
+> `chrome://flags/#enable-webmcp-testing` enabled. The site works normally in any
+> browser; the agent tools only appear in those.
 
-## Sites Lifecycle
+## What it is
 
-The Sites lifecycle CLI runs the locked dependency install before returning this checkout. Edit the source under `app/`, then checkpoint when a coherent milestone is ready to inspect or share. The remote Sites builder runs `npm run build` against the pushed commit. Do not repeat install or build as a normal pre-checkpoint step.
+A spatial canvas — notes, tasks, links, columns and files placed freely on a board.
+WebMCP lets an agent work on that board alongside you.
 
-This starter does not use `wrangler.jsonc`.
+The agent's output stops being a message and becomes an object: something that stays
+where you put it, that you can move, edit, group and keep — and that the agent can
+read back later.
 
-`install:ci` is intentionally a single, non-retrying `npm ci`. It refuses a concurrent install for the same project, consumes a matching image-seeded npm cache with `--prefer-offline` while retaining registry fallback for a missing cache object, otherwise downloads and verifies the complete vinext tarball recorded in `package-lock.json`, limits npm to one socket, and terminates a stalled install. `build` applies a short timeout. These helpers target Linux and use GNU `timeout`; they are not native macOS scripts.
+Chat gives you answers you scroll past. This gives you a board you can move.
 
-Scripts that need writable project-scoped home, npm, XDG, and temporary paths use `scripts/sites-env.sh`. The `dev` and `start` scripts honor the caller's runtime environment and keep Wrangler logs inside the checkout. The generated `.sites-runtime/` directory is disposable and ignored by Git.
+## The seven tools
 
-## Included Shape
+| Tool | What the agent can do |
+|---|---|
+| `list-boards` | See which boards exist |
+| `read-board` | Read one board's items and layout |
+| `search-items` | Find text across every board |
+| `create-board` | Start a new board |
+| `add-items` | Add many notes, tasks, links or columns in one call |
+| `update-item` | Edit an item, or tick a task |
+| `group-items` | Arrange items into labelled columns |
 
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+`group-items` takes meaning, not coordinates: the agent says which items belong
+together and what to call each group, and the application does the geometry —
+measuring each card, sizing the columns to fit, growing the canvas to hold them.
 
-## Workspace Auth Headers
+`add-items` is batched, so a single call can populate an entire board.
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+Tools are registered with the imperative API in the top-level document. ChatGPT's
+browser does not discover tools inside iframes and does not support the declarative
+form API, so this runs in both browsers.
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+## What the agent deliberately cannot do
 
-Treat the full name as optional and fall back to email when it is absent:
+The agent can create, read and organise. It cannot delete your content. Notes, tasks,
+links and files are never removed by an agent — only regrouped. Column headings are
+structural labels and are replaced when a board is reorganised.
 
-```tsx
-import { headers } from "next/headers";
+There is no confirmation API in the WebMCP specification yet, and our read tools
+return user-generated content flagged `untrustedContentHint` — so a delete tool in
+that context is a prompt-injection hazard we chose not to ship. Instead the agent
+groups items it suggests removing, and the person removes them.
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+## Running it locally
 
-  const displayName = fullName ?? email;
-  // ...
-}
-```
+Requires Node 22.13 or later.
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+    npm ci
+    npm run dev
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+Tests:
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- In a Server Component, start sign-in with
-  `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper
-  module is server-only; do not import it into a Client Component.
-- Do not use `fetch`, XHR, a client-side router, or a framework link that can
-  prefetch the sign-in route. SIWC must start as a top-level navigation.
-- Never request the AuthAPI authorization endpoint directly. The dispatch-owned
-  `/signin-with-chatgpt` route must start the SIWC flow.
-- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+    npm test
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+`.openai/hosting.json` declares the Cloudflare D1 and R2 bindings. The `project_id`
+is replaced with a placeholder — substitute your own ChatGPT Sites project id to
+deploy.
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+On macOS the packaged build script expects GNU tools; use `npx vite build` instead
+of `npm run build`.
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
+## Built with
 
-## Diagnostic Commands
+Next.js 16, React 19, TypeScript, Vite, Cloudflare D1 and R2, deployed on ChatGPT
+Sites. Authentication uses Sign in with ChatGPT, with every board scoped to the
+signed-in user and anonymous visitors given their own isolated workspace.
 
-- `npm run install:ci`: perform the one bounded lockfile install
-- `npm run dev`: start the Vite/Vinext development server
-- `npm run build`: build the deployable Sites artifact
-- `npm run start`: start the built Vinext application
-- `npm test`: build and verify the rendered development-preview metadata
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+## Licence
 
-Use build commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
-
-The timeout defaults can be overridden for a controlled canary with `SITES_INSTALL_TIMEOUT`, `SITES_INSTALL_KILL_AFTER`, `SITES_BUILD_TIMEOUT`, and `SITES_BUILD_KILL_AFTER`. A timeout fails the command; the helpers never retry an unchanged install or build.
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+MIT — see [LICENSE](LICENSE).
