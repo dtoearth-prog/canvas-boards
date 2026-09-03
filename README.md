@@ -7,7 +7,8 @@ Live site: https://canvas-boards.dtoearth.chatgpt.site/
 > **For judges:** the WebMCP tools require the ChatGPT desktop app's built-in browser
 > (model GPT-5.6 Sol or Terra — Luna has WebMCP disabled), or Chrome 149+ with
 > `chrome://flags/#enable-webmcp-testing` enabled. The site works normally in any
-> browser; the agent tools only appear in those.
+> browser; the agent tools only appear in those. No credentials required — you get
+> your own private workspace automatically. Signing in with ChatGPT is optional.
 
 ## What it is
 
