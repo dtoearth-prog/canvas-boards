@@ -23,7 +23,7 @@ Chat gives you answers you scroll past. This gives you a board you can move.
 *Adamastor is the giant of the Cape of Storms in Camões' Os Lusíadas — the one who
 guards the passage round the Cape.*
 
-## The seven tools
+## The eight tools
 
 | Tool | What the agent can do |
 |---|---|
@@ -31,6 +31,7 @@ guards the passage round the Cape.*
 | `read-board` | Read one board's items and layout |
 | `search-items` | Find text across every board |
 | `create-board` | Start a new board |
+| `open-board` | Bring a board on screen |
 | `add-items` | Add many notes, tasks, links or columns in one call |
 | `update-item` | Edit an item, or tick a task |
 | `group-items` | Arrange items into labelled columns |
